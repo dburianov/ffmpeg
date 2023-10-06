@@ -3,6 +3,7 @@ services:
   - "docker:dind"
 stages:
 - test
+- setvars
 - publish
 
 variables:
@@ -16,6 +17,14 @@ sast:
   stage: test
 include:
 - template: Security/SAST.gitlab-ci.yml
+
+setvars-job:
+  stage: setvars
+  script:
+    - echo "BUILD_TAG=$(date +%Y%m%d.%H%M)" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
 
 publish_develop:
     stage: publish
@@ -35,11 +44,10 @@ publish_develop:
     script:
         - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
         - docker buildx create --use
-        - tag=$(date +%Y%m%d%H%M)
         - docker buildx build
           --platform linux/amd64
           --tag dburianov/ffmpeg:latest
-          --tag dburianov/ffmpeg:$tag
+          --tag dburianov/ffmpeg:$BUILD_TAG
           --push
           --progress plain
           -f Dockerfile
