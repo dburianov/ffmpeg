@@ -7,10 +7,11 @@ RUN <<EOT
     echo $TZ > /etc/timezone
 EOT
 RUN <<EOT
+    echo "Install packages to base"
+    set -e
     apt-get update
-    #apt-get upgrade -y
     apt-get install -y -qy --no-install-recommends --no-install-suggests \
-        software-properties-common xxd
+        xxd
     rm -rf /var/lib/apt/lists/*
     rm -rf /usr/share/doc/*
     rm -rf /usr/share/man/*
@@ -21,24 +22,21 @@ EOT
 FROM base as prebuild
 LABEL maintainer="Dmytro Burianov <dmytro@burianov.net>"
 RUN <<EOT
+    echo "Install packages to pre build"
+    set -e
     apt-get -yqq update
     apt-get install -y --no-install-recommends --no-install-suggests \
-        git unzip libxml2-dev \
-        libbz2-dev libcurl4-openssl-dev libmcrypt-dev libmhash2 \
-        libmhash-dev libpcre3 libpcre3-dev make build-essential \
-        libxslt1-dev libgeoip-dev \
+        git unzip libxml2-dev libbz2-dev libcurl4-openssl-dev libmcrypt-dev libmhash2 \
+        libmhash-dev libpcre3 libpcre3-dev make build-essential libxslt1-dev libgeoip-dev \
         libpam-dev libgoogle-perftools-dev lua5.1 liblua5.1-0 \
-        liblua5.1-0-dev checkinstall wget libssl-dev \
-        mercurial meld openssh-server \
+        liblua5.1-0-dev checkinstall wget libssl-dev mercurial meld \
         autoconf automake cmake libass-dev libfreetype6-dev \
         libsdl2-dev libtheora-dev libtool libva-dev libvdpau-dev \
         libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev \
         texinfo zlib1g-dev pkgconf libyajl-dev libpcre++-dev liblmdb-dev \
         gettext gnupg2 curl python3 jq ca-certificates gcc g++ \
-        libssl-dev libpcre3-dev \
-        zlib1g-dev libxslt-dev libgd-dev libgeoip-dev \
-        libperl-dev gperf uthash-dev \
-        python3-pip libx265-dev libnuma-dev zstd libzstd-dev wget
+        libxslt-dev libgd-dev libperl-dev gperf uthash-dev \
+        python3-pip libx265-dev libnuma-dev zstd libzstd-dev
     pip3 install --user meson
     rm -rf /var/lib/apt/lists/*
     rm -rf /usr/share/doc/*
@@ -434,6 +432,7 @@ RUN <<EOT
     set -e
     cd ${SRC_BASE_DIR}
     git clone --depth 1 --branch release/6.0 https://git.ffmpeg.org/ffmpeg.git ffmpeg
+    chmod +x /version.sh
     mv /version.sh ffmpeg/ffbuild/version.sh
 EOT
 
