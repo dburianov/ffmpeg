@@ -1,13 +1,48 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+image: docker
+services:
+  - "docker:dind"
 stages:
 - test
+- publish
+
+variables:
+    IMAGE_LATEST: dburianov/ffmpeg:latest
+    IMAGE_COMMIT: dburianov/ffmpeg:$CI_COMMIT_SHORT_SHA
+    CI: 'false'
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+
 sast:
   stage: test
 include:
 - template: Security/SAST.gitlab-ci.yml
+
+publish_develop:
+    stage: publish
+    except:
+      changes:
+        - "README.md"
+    only:
+      refs:
+        - master
+        - main
+      variables:
+        - $CI_COMMIT_MESSAGE =~ /^Release .*$/
+        - "$CI_COMMIT_MESSAGE =~ /^(feat|fix): .+/"
+        - $CI_PIPELINE_SOURCE == "schedule"
+    services:
+        - docker:dind
+    script:
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+        - docker buildx create --use
+        - tag=$(date +%Y%m%d%H%M)
+        - docker buildx build
+          --platform linux/amd64
+          --tag dburianov/ffmpeg:latest
+          --tag dburianov/ffmpeg:$tag
+          --push
+          --progress plain
+          -f Dockerfile
+          .
+        - docker logout
+
