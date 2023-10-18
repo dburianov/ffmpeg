@@ -36,7 +36,7 @@ RUN <<EOT
         texinfo zlib1g-dev pkgconf libyajl-dev libpcre++-dev liblmdb-dev \
         gettext gnupg2 curl python3 jq ca-certificates gcc g++ \
         libxslt-dev libgd-dev libperl-dev gperf uthash-dev \
-        python3-pip libx265-dev libnuma-dev zstd libzstd-dev
+        python3-pip libx265-dev libnuma-dev zstd libzstd-dev ninja-build
     pip3 install --user meson
     rm -rf /var/lib/apt/lists/*
     rm -rf /usr/share/doc/*
@@ -344,14 +344,6 @@ RUN <<EOT
     PATH="$HOME/bin:$PATH" cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_DEC=OFF -DBUILD_SHARED_LIBS=OFF ..
     PATH="$HOME/bin:$PATH" make
     make install
-EOT
-
-RUN <<EOT
-    echo "Get ninja"
-    set -e
-    wget -qO /usr/local/bin/ninja.gz https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
-    gunzip /usr/local/bin/ninja.gz
-    chmod a+x /usr/local/bin/ninja
 EOT
 
 RUN <<EOT

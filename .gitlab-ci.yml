@@ -4,19 +4,24 @@ services:
 stages:
 - test
 - setvars
+- build
+- prepare
 - publish
+- failed
 
 variables:
     IMAGE_LATEST: dburianov/ffmpeg:latest
     IMAGE_COMMIT: dburianov/ffmpeg:$CI_COMMIT_SHORT_SHA
     CI: 'false'
-    DOCKER_HOST: "tcp://docker:2375"
     DOCKER_TLS_CERTDIR: ""
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - "https://gitlab.com/burianov/gitla-ci/-/raw/main/templates/.cleanup_script.yml"
 
 sast:
   stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+
 
 setvars-job:
   stage: setvars
@@ -26,7 +31,61 @@ setvars-job:
     reports:
       dotenv: build.env
 
-publish_develop:
+.build_script: &build_script
+    image: docker:latest
+    except:
+      changes:
+        - "README.md"
+    only:
+      refs:
+        - master
+        - main
+        - testatm64
+      variables:
+        - $CI_COMMIT_MESSAGE =~ /^Release .+/
+        - "$CI_COMMIT_MESSAGE =~ /^(feat|fix): .+/"
+        - "$CI_COMMIT_MESSAGE =~ /^Merge branch .* into .main./"
+        - $CI_PIPELINE_SOURCE == "schedule"
+        - $CI_COMMIT_MESSAGE =~ /^testarm64.*/
+    services:
+        - docker:dind
+    script:
+        - docker login -u $CI_MY_REGISTRY_USER -p $CI_MY_REGISTRY_PASSWORD $CI_MY_REGISTRY
+        - docker buildx create --use
+        - docker buildx build
+          --platform $ARCH
+          --tag $DOCKER_REPO:$TAG_SSL-latest
+          --tag $DOCKER_REPO:$TAG_SSL-$BUILD_TAG
+          --push
+          --progress plain
+          -f Dockerfile
+          .
+        - docker logout
+
+publish_develop_amd64:
+    stage: build
+    variables:
+      TAG_SSL: "linux-amd64"
+      ARCH: "linux/amd64"
+#      DOCKERFILE_SUFIX: modsecutity_rules
+      DOCKER_REPO: "$CI_MY_REGISTRY/burianov/ffmpeg"
+    <<: *build_script
+
+publish_develop_arm64:
+    stage: build
+    tags:
+    - arm64
+    variables:
+      TAG_SSL: "linux-arm64-v8"
+      ARCH: "linux/arm64/v8"
+#      DOCKERFILE_SUFIX: modsecutity_rules
+      DOCKER_REPO: "$CI_MY_REGISTRY/burianov/ffmpeg"
+    <<: *build_script
+
+
+
+docker_push:
+    image: docker:latest
     stage: publish
     except:
       changes:
@@ -35,22 +94,47 @@ publish_develop:
       refs:
         - master
         - main
+        - testatm64
+#        - merge_requests
       variables:
-        - $CI_COMMIT_MESSAGE =~ /^Release .*$/
+        - $CI_COMMIT_MESSAGE =~ /^Release .+/
         - "$CI_COMMIT_MESSAGE =~ /^(feat|fix): .+/"
+        - "$CI_COMMIT_MESSAGE =~ /^Merge branch .* into .main./"
         - $CI_PIPELINE_SOURCE == "schedule"
+        - $CI_COMMIT_MESSAGE =~ /^testarm64.*/
     services:
         - docker:dind
     script:
         - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-        - docker buildx create --use
-        - docker buildx build
-          --platform linux/amd64
-          --tag dburianov/ffmpeg:latest
-          --tag dburianov/ffmpeg:$BUILD_TAG
-          --push
+        - docker login -u $CI_MY_REGISTRY_USER -p $CI_MY_REGISTRY_PASSWORD $CI_MY_REGISTRY
+
+        - docker pull --platform linux/arm64/v8 $CI_MY_REGISTRY/burianov/ffmpeg:linux-arm64-v8-latest
+        - docker pull --platform linux/arm64/v8 $CI_MY_REGISTRY/burianov/ffmpeg:linux-arm64-v8-$BUILD_TAG
+        - docker pull --platform linux/amd64 $CI_MY_REGISTRY/burianov/ffmpeg:linux-amd64-latest
+        - docker pull --platform linux/amd64 $CI_MY_REGISTRY/burianov/ffmpeg:linux-amd64-$BUILD_TAG
+
+        - docker buildx imagetools create
+          -t dburianov/ffmpeg:latest
+          -t $CI_MY_REGISTRY/burianov/ffmpeg:latest
+          $CI_MY_REGISTRY/burianov/ffmpeg:linux-arm64-v8-latest
+          $CI_MY_REGISTRY/burianov/ffmpeg:linux-amd64-latest
           --progress plain
-          -f Dockerfile
-          .
-        - docker logout
+        - docker buildx imagetools create
+          -t dburianov/ffmpeg:$BUILD_TAG
+          -t $CI_MY_REGISTRY/burianov/ffmpeg:$BUILD_TAG
+          $CI_MY_REGISTRY/burianov/ffmpeg:linux-arm64-v8-$BUILD_TAG
+          $CI_MY_REGISTRY/burianov/ffmpeg:linux-amd64-$BUILD_TAG
+          --progress plain
+
+cleanup_amd64:
+    stage: failed
+    when: always
+    extends: .cleanup_script
+
+cleanup_arm64_v8:
+    tags:
+    - arm64
+    when: always
+    stage: failed
+    extends: .cleanup_script
 
