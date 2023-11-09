@@ -22,7 +22,6 @@ include:
 sast:
   stage: test
 
-
 setvars-job:
   stage: setvars
   script:
