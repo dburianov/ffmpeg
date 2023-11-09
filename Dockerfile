@@ -19,7 +19,7 @@ RUN <<EOT
     apt-get clean -y
 EOT
 
-FROM base as prebuild
+FROM base AS prebuild
 LABEL maintainer="Dmytro Burianov <dmytro@burianov.net>"
 RUN <<EOT
     echo "Install packages to pre build"
@@ -103,7 +103,7 @@ RUN <<EOT
     set -e
     mkdir -p ${SRC_BASE_DIR} /usr/src/bin
     cd ${SRC_BASE_DIR}
-    wget --no-check-certificate https://netcologne.dl.sourceforge.net/project/opencore-amr/opencore-amr/opencore-amr-${OPENCOREAMR_VERSION}.tar.gz
+    wget https://netcologne.dl.sourceforge.net/project/opencore-amr/opencore-amr/opencore-amr-${OPENCOREAMR_VERSION}.tar.gz
     tar -xzf opencore-amr-${OPENCOREAMR_VERSION}.tar.gz
     cd opencore-amr-${OPENCOREAMR_VERSION}
     ./configure --enable-shared
@@ -116,7 +116,7 @@ RUN <<EOT
     set -e
     mkdir -p ${SRC_BASE_DIR} /usr/src/bin
     cd ${SRC_BASE_DIR}
-    wget http://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.bz2
+    wget https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.bz2
     tar xjvf nasm-${NASM_VERSION}.tar.bz2
     cd nasm-${NASM_VERSION}
     ./autogen.sh
@@ -129,7 +129,7 @@ RUN <<EOT
     echo "Compiling yasm"
     set -e
     cd ${SRC_BASE_DIR}
-    wget -O yasm-1.3.0.tar.gz http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
+    wget -O yasm-1.3.0.tar.gz https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
     tar xzvf yasm-1.3.0.tar.gz
     cd yasm-1.3.0
     ./configure --bindir="/usr/bin"
@@ -162,7 +162,7 @@ EOT
 RUN <<EOT
     cd ${SRC_BASE_DIR}
     set -e
-    wget http://downloads.xiph.org/releases/ogg/libogg-${OGG_VERSION}.tar.gz
+    wget https://downloads.xiph.org/releases/ogg/libogg-${OGG_VERSION}.tar.gz
     tar -xzf libogg-${OGG_VERSION}.tar.gz
     cd libogg-${OGG_VERSION}
     ./configure --enable-shared
@@ -173,7 +173,7 @@ EOT
 RUN <<EOT
     cd ${SRC_BASE_DIR}
     set -e
-    wget http://downloads.xiph.org/releases/vorbis/libvorbis-${VORBIS_VERSION}.tar.gz
+    wget https://downloads.xiph.org/releases/vorbis/libvorbis-${VORBIS_VERSION}.tar.gz
     tar -xzf libvorbis-${VORBIS_VERSION}.tar.gz
     cd libvorbis-${VORBIS_VERSION}
     ./configure --with-ogg="${PREFIX}" --enable-shared
@@ -208,7 +208,7 @@ RUN <<EOT
     echo "Compiling lame"
     set -e
     cd ${SRC_BASE_DIR}
-    wget -O lame-${LAME_VERSION}.tar.gz http://downloads.sourceforge.net/project/lame/lame/${LAME_VERSION}/lame-${LAME_VERSION}.tar.gz
+    wget -O lame-${LAME_VERSION}.tar.gz https://downloads.sourceforge.net/project/lame/lame/${LAME_VERSION}/lame-${LAME_VERSION}.tar.gz
     tar xzvf lame-${LAME_VERSION}.tar.gz
     cd lame-${LAME_VERSION}
     PATH="/usr/bin:$PATH" ./configure --bindir="/usr/bin" --disable-shared --enable-nasm
