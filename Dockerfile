@@ -513,7 +513,7 @@ RUN <<EOT
       xargs -i cp -rfvL {} /usr/local/lib/
     cp -rf ${PREFIX}/* /usr/local/
     LD_LIBRARY_PATH=/usr/local/lib ffmpeg -buildconf
-    strip /usr/local/lib/*.so* /usr/local/lib/*.a
+    strip /usr/local/lib/*.a
 EOT
 
 FROM base AS release
