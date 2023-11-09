@@ -36,7 +36,7 @@ RUN <<EOT
         texinfo zlib1g-dev pkgconf libyajl-dev libpcre++-dev liblmdb-dev \
         gettext gnupg2 curl python3 jq ca-certificates gcc g++ \
         libxslt-dev libgd-dev libperl-dev gperf uthash-dev \
-        python3-pip libx265-dev libnuma-dev zstd libzstd-dev ninja-build
+        python3-pip libx265-dev libnuma-dev zstd libzstd-dev
     pip3 install --user meson
     rm -rf /var/lib/apt/lists/*
     rm -rf /usr/share/doc/*
@@ -347,6 +347,14 @@ RUN <<EOT
 EOT
 
 RUN <<EOT
+    echo "Get ninja"
+    set -e
+    wget -qO /usr/local/bin/ninja.gz https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
+    gunzip /usr/local/bin/ninja.gz
+    chmod a+x /usr/local/bin/ninja
+EOT
+
+RUN <<EOT
     echo "Compiling dav1d"
     set -e
     cd ${SRC_BASE_DIR}
@@ -505,6 +513,7 @@ RUN <<EOT
       xargs -i cp -rfvL {} /usr/local/lib/
     cp -rf ${PREFIX}/* /usr/local/
     LD_LIBRARY_PATH=/usr/local/lib ffmpeg -buildconf
+    strip /usr/local/lib/*.so* /usr/local/lib/*.a
 EOT
 
 FROM base AS release
