@@ -232,7 +232,7 @@ RUN <<EOT
     echo "Compiling aom"
     set -e
     cd ${SRC_BASE_DIR}
-    git clone --depth 1 https://aomedia.googlesource.com/aom
+    git clone --depth 1 -b v3.7.0 https://aomedia.googlesource.com/aom
     mkdir -p aom_build
     cd aom_build
     PATH="$HOME/bin:$PATH" cmake -G "Unix Makefiles" \
