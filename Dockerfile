@@ -338,9 +338,11 @@ RUN <<EOT
     echo "Compiling AV1"
     set -e
     cd ${SRC_BASE_DIR}
-    git clone --depth 1 https://gitlab.com/AOMediaCodec/SVT-AV1.git
+    git clone https://gitlab.com/AOMediaCodec/SVT-AV1.git
     mkdir -p SVT-AV1/build
-    cd SVT-AV1/build
+    cd SVT-AV1
+    git checkout a6f0981c2b82aea05205b96bfebb1e6cd53790de
+    cd build
     PATH="$HOME/bin:$PATH" cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_DEC=OFF -DBUILD_SHARED_LIBS=OFF ..
     PATH="$HOME/bin:$PATH" make
     make install
